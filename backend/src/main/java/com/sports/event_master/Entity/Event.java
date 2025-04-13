@@ -1,21 +1,25 @@
 package com.sports.event_master.Entity;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name="event_master")
-public class TypeEvent {
+public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "event_id")
-    private Long eventId;
+    private Long id;
 
     @Column(name = "event_type", nullable = false)
     private String eventType;
@@ -24,26 +28,32 @@ public class TypeEvent {
     private String eventName;
 
     @Column(name = "event_head", nullable = false)
-    private String eventHead;
+    private Long eventHead;
 
     @Column(name="event_day",nullable=false)
-    private Date eventDay;
+    private LocalDate eventDay;
 
-    @Column(name = "venue_id")
+    @Column(name = "venue_id",nullable=false)
     private Long venue;
 
-    @Column(name = "result_id")
-    private Long result;
+    @OneToMany(mappedBy = "event")
+    @JsonManagedReference
+    private List<Sponsorships> sponsorships;
 
-    @Column(name = "sponsor_id")
-    private Long sponsor;
+    public List<Sponsorships> getSponsorships() {
+        return sponsorships;
+    }
+
+    public void setSponsorships(List<Sponsorships> sponsorships) {
+        this.sponsorships = sponsorships;
+    }
 
     public Long getEventId() {
-        return eventId;
+        return id;
     }
 
     public void setEventId(Long eventId) {
-        this.eventId = eventId;
+        this.id = eventId;
     }
 
     public String getEventType() {
@@ -54,36 +64,20 @@ public class TypeEvent {
         this.eventType = eventType;
     }
 
-    public String getEventHead() {
+    public Long getEventHead() {
         return eventHead;
     }
 
-    public void setEventHead(String eventHead) {
+    public void setEventHead(Long eventHead) {
         this.eventHead = eventHead;
     }
 
-    public Date getEventDay() {
+    public LocalDate getEventDay() {
         return eventDay;
     }
 
-    public void setEventDay(Date eventDay) {
+    public void setEventDay(LocalDate eventDay) {
         this.eventDay = eventDay;
-    }
-
-    public Long getResult() {
-        return result;
-    }
-
-    public void setResult(Long result) {
-        this.result = result;
-    }
-
-    public Long getSponsor() {
-        return sponsor;
-    }
-
-    public void setSponsor(Long sponsor) {
-        this.sponsor = sponsor;
     }
 
     public Long getVenue() {

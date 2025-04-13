@@ -1,44 +1,106 @@
-body {
-  background-color: #f5f5f5;
-  font-family: system-ui, -apple-system, sans-serif;
+@import '@angular/material/prebuilt-themes/purple-green.css';
+
+html, body {
+  height: 100%;
   margin: 0;
-  padding: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: white;
 }
 
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 20px;
 }
 
-button {
+.mat-mdc-card {
+  margin: 10px;
   cursor: pointer;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-}
-
-button.primary {
-  background-color: #3b82f6;
+  transition: transform 0.2s;
+  background-color: #424242;
   color: white;
 }
 
-button.danger {
-  background-color: #ef4444;
+.mat-mdc-card:hover {
+  transform: translateY(-2px);
+}
+
+.mat-mdc-card-title, .mat-mdc-card-subtitle {
+  color: white !important;
+}
+
+.upcoming-event {
+  border-left: 4px solid #69f0ae;
+}
+
+.past-event {
+  border-left: 4px solid #9E9E9E;
+}
+
+.flex-spacer {
+  flex: 1 1 auto;
+}
+
+.custom-dialog .mat-mdc-dialog-container {
+  background-color: #1a1a1a !important;
+  color: white !important;
+}
+
+.custom-dialog .mat-mdc-dialog-surface {
+  background-color: #1a1a1a !important;
+  color: white !important;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}
+
+.mat-mdc-snack-bar-container {
+  background: #2d2d2d;
   color: white;
 }
 
-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin: 0 8px;
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-color: #1a1a1a;
 }
 
-.card {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 16px;
+.mat-calendar {
+  background-color: #2d2d2d !important;
+}
+
+.mat-calendar-body-cell-content {
+  color: white !important;
+}
+
+.mat-calendar-body-selected {
+  background-color: #69f0ae !important;
+  color: black !important;
+}
+
+.mat-calendar-arrow {
+  fill: white !important;
+}
+
+.mat-datepicker-toggle {
+  color: white !important;
+}
+
+.mat-mdc-select-panel {
+  background: #2d2d2d !important;
+  color: white !important;
+}
+
+.mat-mdc-option {
+  color: white !important;
+}
+
+.mat-mdc-option:hover {
+  background: rgba(105, 240, 174, 0.1) !important;
+}
+
+.mat-mdc-option.mat-selected {
+  background: rgba(105, 240, 174, 0.2) !important;
+  color: #69f0ae !important;
+}
+
+.mdc-tab__text-label{
+  color: black;
 }

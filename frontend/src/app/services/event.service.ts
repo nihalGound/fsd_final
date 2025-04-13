@@ -1,41 +1,57 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { SportEvent, CreateEventDto } from '../models/event.model';
+import { Injectable } from "@angular/core";
+import { HttpClient } from "@angular/common/http";
+import { Observable } from "rxjs";
+import { Event, Sponsorship, CreateEventRequest } from "../models/event.model";
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: "root",
 })
 export class EventService {
-  private apiUrl = 'http://localhost:8081/api/event';
+  private apiUrl = "http://localhost:8081/api";
 
   constructor(private http: HttpClient) {}
 
-  getEvents(): Observable<SportEvent[]> {
-    return this.http.get<SportEvent[]>(this.apiUrl);
+  getUserId(): { id: number } {
+    return { id: 101 };
   }
 
-  getEvent(id: number): Observable<SportEvent> {
-    return this.http.get<SportEvent>(`${this.apiUrl}/${id}`);
+  getAllEvents(): Observable<Event[]> {
+    return this.http.get<Event[]>(`${this.apiUrl}/events`);
   }
 
-  createEvent(event: CreateEventDto): Observable<SportEvent> {
-    return this.http.post<SportEvent>(`${this.apiUrl}/create`, event);
+  getEventById(id: number): Observable<Event> {
+    return this.http.get<Event>(`${this.apiUrl}/events/${id}`);
   }
 
-  deleteEvent(id: number): Observable<string> {
-    return this.http.delete<string>(`${this.apiUrl}/${id}`);
+  getMyEvents(userId: number): Observable<Event[]> {
+    return this.http.get<Event[]>(`${this.apiUrl}/events/user/${userId}`);
   }
 
-  updateVenue(id: number, venue: number): Observable<string> {
-    return this.http.put<string>(`${this.apiUrl}/${id}/changeVenue`, venue);
+  getSponsoredEvents(sponsorId: number): Observable<Event[]> {
+    return this.http.get<Event[]>(`${this.apiUrl}/events/sponsor/${sponsorId}`);
   }
 
-  updateSponsor(id: number, sponsor: number): Observable<string> {
-    return this.http.put<string>(`${this.apiUrl}/${id}/changeSponsor`, sponsor);
+  getSponsorshipRequests(eventId: number): Observable<Sponsorship[]> {
+    return this.http.get<Sponsorship[]>(
+      `${this.apiUrl}/events/${eventId}/sponsorships`
+    );
   }
 
-  updateResult(id: number, result: number): Observable<string> {
-    return this.http.put<string>(`${this.apiUrl}/${id}/setResult`, result);
+  acceptSponsorshipRequest(sponsorshipId: number): Observable<Sponsorship> {
+    return this.http.put<Sponsorship>(
+      `${this.apiUrl}/events/sponsorships/${sponsorshipId}/accept`,
+      {}
+    );
+  }
+
+  updateEventVenue(eventId: number, newVenue: number): Observable<Event> {
+    return this.http.put<Event>(
+      `${this.apiUrl}/events/${eventId}/venue`,
+      newVenue
+    );
+  }
+
+  createEvent(event: CreateEventRequest): Observable<Event> {
+    return this.http.post<Event>(`${this.apiUrl}/events`, event);
   }
 }
