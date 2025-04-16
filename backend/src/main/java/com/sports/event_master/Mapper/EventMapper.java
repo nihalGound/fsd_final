@@ -22,7 +22,7 @@ public class EventMapper {
         dto.setEventType(event.getEventType());
         dto.setEventHead(event.getEventHead());
         dto.setEventDay(event.getEventDay());
-        dto.setVenue(event.getVenue());
+        dto.setVenueBooked(event.getVenueBooked());
         
         if (event.getSponsorships() != null) {
             dto.setSponsorships(toSponsorshipDtoList(event.getSponsorships()));

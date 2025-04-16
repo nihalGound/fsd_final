@@ -21,11 +21,11 @@ public class Sponsorships {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "sponsor_id", nullable = false)
+    @JoinColumn(name = "sponsor", nullable = false)
     private Sponsor sponsor;
 
     @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
+    @JoinColumn(name = "event", nullable = false)
     @JsonBackReference
     private Event event;
 

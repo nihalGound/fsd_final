@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -33,8 +34,9 @@ public class Event {
     @Column(name="event_day",nullable=false)
     private LocalDate eventDay;
 
-    @Column(name = "venue_id",nullable=false)
-    private Long venue;
+    @OneToOne(mappedBy = "event")
+    @JsonManagedReference
+    private VenueBooking venueBooked;
 
     @OneToMany(mappedBy = "event")
     @JsonManagedReference
@@ -80,19 +82,19 @@ public class Event {
         this.eventDay = eventDay;
     }
 
-    public Long getVenue() {
-        return venue;
-    }
-
-    public void setVenue(Long venue) {
-        this.venue = venue;
-    }
-
     public String getEventName() {
         return eventName;
     }
 
     public void setEventName(String eventName) {
         this.eventName = eventName;
+    }
+
+    public VenueBooking getVenueBooked() {
+        return venueBooked;
+    }
+
+    public void setVenueBooked(VenueBooking venueBooked) {
+        this.venueBooked = venueBooked;
     }
 }

@@ -37,6 +37,9 @@
           }
         },
         "serve": {
+          "options": {
+            "disableHostCheck": false
+          },
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "development": {

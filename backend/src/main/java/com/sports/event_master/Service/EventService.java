@@ -1,18 +1,25 @@
 package com.sports.event_master.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sports.event_master.Entity.Event;
-import com.sports.event_master.Entity.Sponsorships;
-import com.sports.event_master.Repository.EventRepository;
-import com.sports.event_master.Repository.SponsorshipRepository;
 import com.sports.event_master.DTO.EventDTO;
 import com.sports.event_master.DTO.SponsorshipDTO;
+import com.sports.event_master.Entity.Event;
+import com.sports.event_master.Entity.Sponsorships;
+import com.sports.event_master.Entity.Venue;
+import com.sports.event_master.Entity.VenueBooking;
 import com.sports.event_master.Mapper.EventMapper;
+import com.sports.event_master.Repository.EventRepository;
+import com.sports.event_master.Repository.SponsorshipRepository;
+import com.sports.event_master.Repository.VenueBookingRepository;
+import com.sports.event_master.Repository.VenueRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 @Transactional
@@ -21,11 +28,15 @@ public class EventService {
     private final EventRepository eventRepository;
     private final SponsorshipRepository sponsorshipRepository;
     private final EventMapper eventMapper;
+    private final VenueBookingRepository venueBookingRepository;
+    private final VenueRepository venueRepository;
 
-    public EventService(EventRepository eventRepository, SponsorshipRepository sponsorshipRepository, EventMapper eventMapper) {
+    public EventService(EventRepository eventRepository, SponsorshipRepository sponsorshipRepository, EventMapper eventMapper,VenueBookingRepository venueBookingRepository,VenueRepository venueRepository) {
         this.eventRepository = eventRepository;
         this.sponsorshipRepository = sponsorshipRepository;
         this.eventMapper = eventMapper;
+        this.venueBookingRepository = venueBookingRepository;
+        this.venueRepository = venueRepository;
     }
 
     // Event CRUD operations
@@ -66,13 +77,52 @@ public class EventService {
         Sponsorships savedSponsorship = sponsorshipRepository.save(sponsorship);
         return eventMapper.toSponsorshipDto(savedSponsorship);
     }
-
-    public EventDTO updateVenue(Long eventId, Long newVenue) {
+   @Transactional
+    public EventDTO updateVenueBooked(Long eventId, Long venueId,String bookingDate) {
+        // Fetch Event by ID
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new RuntimeException("Event not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with ID: " + eventId));
 
-        event.setVenue(newVenue);
-        Event updatedEvent = eventRepository.save(event);
-        return eventMapper.toDto(updatedEvent);
+        // Fetch Venue by ID
+        Venue venue = venueRepository.findById(venueId)
+                .orElseThrow(() -> new EntityNotFoundException("Venue not found with ID: " + venueId));
+
+        // Fetch current VenueBooking
+        VenueBooking currentBooking = event.getVenueBooked();
+        if(currentBooking==null){
+            currentBooking = new VenueBooking();
+            currentBooking.setEvent(event);
+            currentBooking.setBookingDate(LocalDate.parse(bookingDate));
+        }
+
+        currentBooking.setVenue(venue);
+
+        venueBookingRepository.save(currentBooking);
+
+        // Update Event and save
+        event.setVenueBooked(currentBooking);
+        eventRepository.save(event);
+
+        // Convert to DTO and return
+        return eventMapper.toDto(event);
+    }
+
+    @Transactional
+    public String deleteEventById(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new EntityNotFoundException("Event with ID " + eventId + " not found"));
+    
+        if (event.getVenueBooked() != null) {
+            venueBookingRepository.deleteById(event.getVenueBooked().getBookingId());
+        }
+
+        List<Sponsorships> sponsorships = sponsorshipRepository.findByEvent_Id(event.getEventId());
+        for (Sponsorships sponsorship : sponsorships) {
+            sponsorshipRepository.deleteById(sponsorship.getId());
+        }
+    
+        eventRepository.deleteById(event.getEventId());
+    
+        return "Event with ID " + eventId + " and associated venue booking (if any) have been deleted successfully.";
     }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
-import { ActivatedRoute } from "@angular/router";
+import { ActivatedRoute, Router } from "@angular/router";
 import { MatCardModule } from "@angular/material/card";
 import { MatButtonModule } from "@angular/material/button";
 import { MatListModule } from "@angular/material/list";
@@ -9,7 +9,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatDialog } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
 import { EventService } from "../../services/event.service";
-import { Event, venues, Sponsorship } from "../../models/event.model";
+import { Event, Sponsorship } from "../../models/event.model";
 import { EventResultModalComponent } from "../../modals/event-result-modal.component";
 import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.component";
 
@@ -27,12 +27,14 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
   template: `
     <div class="container" *ngIf="event">
       <div class="event-header">
-        <h1>{{ event.eventName }}</h1>
-        <mat-chip-set>
-          <mat-chip [color]="isUpcoming() ? 'accent' : 'warn'" highlighted>
-            {{ isUpcoming() ? "Upcoming" : "Past Event" }}
-          </mat-chip>
-        </mat-chip-set>
+        <div>
+          <h1>{{ event.eventName }}</h1>
+          <mat-chip-set>
+            <mat-chip [color]="isUpcoming() ? 'accent' : 'warn'" highlighted>
+              {{ isUpcoming() ? "Upcoming" : "Past Event" }}
+            </mat-chip>
+          </mat-chip-set>
+        </div>
       </div>
 
       <div class="content-grid">
@@ -62,7 +64,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
               <mat-icon>location_on</mat-icon>
               <div class="info-content">
                 <span class="info-label">Venue</span>
-                <span class="info-value">{{ getVenueName(event.venue) }}</span>
+                <span class="info-value">{{ getVenueName() }}</span>
               </div>
             </div>
             <div class="info-row">
@@ -73,7 +75,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
               </div>
             </div>
           </mat-card-content>
-          <mat-card-actions *ngIf="isUpcoming()">
+          <mat-card-actions *ngIf="isUpcoming() && isEventHead()">
             <button mat-raised-button (click)="updateVenue()">
               <mat-icon>edit_location</mat-icon>
               Update Venue
@@ -81,14 +83,17 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
           </mat-card-actions>
         </mat-card>
 
-        <!-- Sponsorships Card -->
-        <mat-card class="sponsorship-card" *ngIf="hasAcceptedSponsorships()">
+        <!-- Sponsorship Card -->
+        <mat-card
+          class="sponsorship-card"
+          *ngIf="acceptedSponsorships.length > 0"
+        >
           <mat-card-header>
             <mat-card-title>Event Sponsors</mat-card-title>
           </mat-card-header>
           <mat-card-content>
             <div
-              *ngFor="let sponsorship of getAcceptedSponsorships()"
+              *ngFor="let sponsorship of acceptedSponsorships"
               class="sponsor-details"
             >
               <div class="info-row">
@@ -116,10 +121,6 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
                   }}</span>
                 </div>
               </div>
-              <mat-divider
-                *ngIf="!isLastAcceptedSponsorship(sponsorship)"
-                class="sponsor-divider"
-              ></mat-divider>
             </div>
           </mat-card-content>
         </mat-card>
@@ -127,11 +128,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
         <!-- Sponsorship Requests -->
         <mat-card
           class="sponsorship-requests"
-          *ngIf="
-            event.eventHead === getUserId().id &&
-            isUpcoming() &&
-            hasPendingSponsorships()
-          "
+          *ngIf="isUpcoming() && isEventHead()"
         >
           <mat-card-header>
             <mat-card-title>Sponsorship Requests</mat-card-title>
@@ -140,7 +137,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
             <button
               mat-raised-button
               color="primary"
-              (click)="toggleSponsorshipRequests()"
+              (click)="showSponsorshipRequests()"
               *ngIf="!showingSponsorship"
             >
               <mat-icon>monetization_on</mat-icon>
@@ -149,7 +146,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
 
             <div *ngIf="showingSponsorship" class="requests-list">
               <mat-card
-                *ngFor="let sponsorship of getPendingSponsorships()"
+                *ngFor="let request of sponsorshipRequests"
                 class="request-card"
               >
                 <mat-card-content>
@@ -157,9 +154,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
                     <mat-icon>business</mat-icon>
                     <div class="info-content">
                       <span class="info-label">Sponsor</span>
-                      <span class="info-value">{{
-                        sponsorship.sponsor.name
-                      }}</span>
+                      <span class="info-value">{{ request.sponsor.name }}</span>
                     </div>
                   </div>
                   <div class="info-row">
@@ -167,7 +162,7 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
                     <div class="info-content">
                       <span class="info-label">Amount</span>
                       <span class="info-value">{{
-                        sponsorship.contributionAmount
+                        request.contributionAmount
                       }}</span>
                     </div>
                   </div>
@@ -176,16 +171,18 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
                     <div class="info-content">
                       <span class="info-label">Requested On</span>
                       <span class="info-value">{{
-                        sponsorship.requestDate | date
+                        request.requestDate | date
                       }}</span>
                     </div>
                   </div>
                 </mat-card-content>
-                <mat-card-actions>
+                <mat-card-actions
+                  *ngIf="request.status === 'PENDING' && isEventHead()"
+                >
                   <button
                     mat-raised-button
                     color="primary"
-                    (click)="acceptSponsorship(sponsorship.id)"
+                    (click)="acceptSponsorship(request.id)"
                   >
                     Accept Sponsorship
                   </button>
@@ -317,24 +314,21 @@ import { VenueUpdateModalComponent } from "../../modals/venue-update-modal.compo
         display: flex;
         justify-content: flex-end;
       }
-
-      .sponsor-divider {
-        margin: 16px 0;
-        background-color: #4a4a4a;
-      }
     `,
   ],
 })
 export class EventDetailsComponent implements OnInit {
   event?: Event;
+  sponsorshipRequests: Sponsorship[] = [];
+  acceptedSponsorships: Sponsorship[] = [];
   showingSponsorship = false;
-  pendingSponsorships: Sponsorship[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private eventService: EventService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -345,73 +339,28 @@ export class EventDetailsComponent implements OnInit {
   loadEventDetails(eventId: number) {
     this.eventService.getEventById(eventId).subscribe((event) => {
       this.event = event;
-      // Load pending sponsorship requests if this is an upcoming event
-      if (this.isUpcoming()) {
-        this.loadPendingSponsorships(eventId);
+      if (this.event?.sponsorships && this.event.sponsorships.length > 0) {
+        this.acceptedSponsorships = this.event.sponsorships.filter(
+          (s) => s.status === "ACCEPTED"
+        );
+        this.sponsorshipRequests = this.event.sponsorships.filter(
+          (s) => s.status === "PENDING"
+        );
       }
     });
-  }
-
-  getUserId() {
-    return this.eventService.getUserId();
-  }
-
-  loadPendingSponsorships(eventId: number) {
-    if (this.event?.sponsorships?.length) {
-      this.event.sponsorships.forEach((sponsorship) => {
-        if (sponsorship.status === "PENDING") {
-          this.pendingSponsorships.push(sponsorship);
-        }
-      });
-    }
   }
 
   isUpcoming() {
     return this.event ? new Date(this.event.eventDay) > new Date() : false;
   }
 
-  getVenueName(venueId: number): string {
-    const venue = venues.find((v) => v.id === venueId);
-    return venue ? venue.name : `Venue ${venueId}`;
+  isEventHead() {
+    return this.event?.eventHead === this.eventService.getUserId().id;
   }
 
-  hasAcceptedSponsorships(): boolean {
-    return (
-      !!this.event?.sponsorships &&
-      this.event.sponsorships.some((s) => s.status === "ACCEPTED")
-    );
-  }
-
-  hasPendingSponsorships(): boolean {
-    return (
-      this.pendingSponsorships.length > 0 ||
-      (!!this.event?.sponsorships &&
-        this.event.sponsorships.some((s) => s.status === "PENDING"))
-    );
-  }
-
-  getAcceptedSponsorships(): Sponsorship[] {
-    if (!this.event?.sponsorships) return [];
-    return this.event.sponsorships.filter((s) => s.status === "ACCEPTED");
-  }
-
-  getPendingSponsorships(): Sponsorship[] {
-    // Combine pending sponsorships from the event object and the separately loaded pending sponsorships
-    const eventPendingSponsorships =
-      this.event?.sponsorships?.filter((s) => s.status === "PENDING") || [];
-    return [...eventPendingSponsorships, ...this.pendingSponsorships];
-  }
-
-  isLastAcceptedSponsorship(sponsorship: Sponsorship): boolean {
-    const acceptedSponsorships = this.getAcceptedSponsorships();
-    return (
-      acceptedSponsorships.indexOf(sponsorship) ===
-      acceptedSponsorships.length - 1
-    );
-  }
-
-  toggleSponsorshipRequests() {
-    this.showingSponsorship = !this.showingSponsorship;
+  showSponsorshipRequests() {
+    if (!this.event) return;
+    this.showingSponsorship = true;
   }
 
   acceptSponsorship(sponsorshipId: number) {
@@ -430,8 +379,11 @@ export class EventDetailsComponent implements OnInit {
   updateVenue() {
     if (!this.event) return;
     const dialogRef = this.dialog.open(VenueUpdateModalComponent, {
-      width: "600px",
-      data: { currentEventId: this.event.eventId },
+      width: "800px",
+      data: {
+        eventId: this.event.eventId,
+        bookingDate: this.event.eventDay,
+      },
       panelClass: "custom-dialog",
     });
 
@@ -447,6 +399,12 @@ export class EventDetailsComponent implements OnInit {
     });
   }
 
+  getVenueName() {
+    if (this.event?.venueBooked?.venue.venueName)
+      return this.event.venueBooked.venue.venueName;
+    return "No Booking";
+  }
+
   showResults() {
     if (!this.event) return;
     this.dialog.open(EventResultModalComponent, {
@@ -454,5 +412,30 @@ export class EventDetailsComponent implements OnInit {
       data: { eventId: this.event.eventId },
       panelClass: "custom-dialog",
     });
+  }
+
+  deleteEvent() {
+    if (confirm("Are you sure you want to delete this event?")) {
+      this.eventService.deleteEvent(this.event?.eventId!).subscribe({
+        next: (response) => {
+          this.snackBar.open(response.message, "Close", {
+            duration: 3000,
+            panelClass: ["success-snackbar"],
+          });
+          this.router.navigate(["/events"]);
+        },
+        error: (err) => {
+          this.snackBar.open(
+            "Failed to delete event. Please try again later.",
+            "Close",
+            {
+              duration: 3000,
+              panelClass: ["error-snackbar"],
+            }
+          );
+          console.error("Error deleting event:", err);
+        },
+      });
+    }
   }
 }

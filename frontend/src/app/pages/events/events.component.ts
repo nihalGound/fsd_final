@@ -23,7 +23,7 @@ import { CreateEventModalComponent } from "../../modals/create-event-modal.compo
   template: `
     <div class="container">
       <mat-tab-group>
-        <mat-tab label="All Events">
+        <mat-tab label="All Events" class="label">
           <div class="events-grid">
             <app-event-card
               *ngFor="let event of events"
@@ -100,7 +100,7 @@ import { CreateEventModalComponent } from "../../modals/create-event-modal.compo
         font-size: 64px;
         height: 64px;
         width: 64px;
-        color: #69f0ae;
+        color: black;
         margin-bottom: 24px;
       }
 
@@ -128,15 +128,18 @@ import { CreateEventModalComponent } from "../../modals/create-event-modal.compo
       }
 
       ::ng-deep .mat-mdc-tab-group {
-        background-color: white;
+        background-color: #8d8d8d;
       }
 
+      --mat-tab-header-inactive-hover-label-text-color{
+      color:black}
+
       ::ng-deep .mat-tab-label {
-        color: #3f51b5; 
+        color: black; 
       }
 
       ::ng-deep .mat-tab-label.mat-tab-label-active {
-        color: #00c853; 
+        color: black; 
       }
 
       ::ng-deep .mat-mdc-tab-body-content {

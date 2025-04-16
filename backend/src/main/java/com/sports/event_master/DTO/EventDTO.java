@@ -3,13 +3,15 @@ package com.sports.event_master.DTO;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.sports.event_master.Entity.VenueBooking;
+
 public class EventDTO {
     private Long eventId;
     private String eventType;
     private String eventName;
     private Long eventHead;
     private LocalDate eventDay;
-    private Long venue;
+    private VenueBooking venueBooked;
     private List<SponsorshipDTO> sponsorships;
     
     // Getters and setters
@@ -53,19 +55,19 @@ public class EventDTO {
         this.eventDay = eventDay;
     }
     
-    public Long getVenue() {
-        return venue;
-    }
-    
-    public void setVenue(Long venue) {
-        this.venue = venue;
-    }
-    
     public List<SponsorshipDTO> getSponsorships() {
         return sponsorships;
     }
     
     public void setSponsorships(List<SponsorshipDTO> sponsorships) {
         this.sponsorships = sponsorships;
+    }
+
+    public VenueBooking getVenueBooked() {
+        return venueBooked;
+    }
+
+    public void setVenueBooked(VenueBooking venueBooked) {
+        this.venueBooked = venueBooked;
     }
 }

@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common";
 import { MatCardModule } from "@angular/material/card";
 import { MatChipsModule } from "@angular/material/chips";
 import { MatIconModule } from "@angular/material/icon";
-import { Event, venues } from "../../models/event.model";
+import { Event } from "../../models/event.model";
 
 @Component({
   selector: "app-event-card",
@@ -25,7 +25,7 @@ import { Event, venues } from "../../models/event.model";
           </div>
           <div class="info-row">
             <mat-icon>location_on</mat-icon>
-            <span class="info-text">{{ getVenueName(event.venue) }}</span>
+            <span class="info-text">{{ getVenueName() }}</span>
           </div>
           <div class="info-row" *ngIf="getSponsorship()">
             <mat-icon>handshake</mat-icon>
@@ -131,9 +131,10 @@ export class EventCardComponent {
     return new Date(this.event.eventDay) > new Date();
   }
 
-  getVenueName(venueId: number): string {
-    const venue = venues.find((v) => v.id === venueId);
-    return venue ? venue.name : `Venue ${venueId}`;
+  getVenueName(): string {
+    const venueName = this?.event.venueBooked?.venue.venueName;
+    if (venueName) return venueName;
+    return "No booking";
   }
 
   getSponsorship(): string {

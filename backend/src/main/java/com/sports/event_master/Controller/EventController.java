@@ -1,21 +1,26 @@
 package com.sports.event_master.Controller;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sports.event_master.DTO.EventDTO;
 import com.sports.event_master.DTO.SponsorshipDTO;
 import com.sports.event_master.Entity.Event;
 import com.sports.event_master.Service.EventService;
+import com.sports.event_master.Service.VenueService;
 
 @RestController
 @RequestMapping("/api/events")
@@ -23,15 +28,25 @@ import com.sports.event_master.Service.EventService;
 public class EventController {
 
     private final EventService eventService;
+    private final VenueService venueService;
     
-    public EventController(EventService eventService) {
+    public EventController(EventService eventService,VenueService venueService) {
         this.eventService = eventService;
+        this.venueService = venueService;
     }
     
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+    public ResponseEntity<EventDTO> createEvent(@RequestBody Event event, @RequestParam(required = false) Long venueId) {
+        // Create the event
         Event createdEvent = eventService.createEvent(event);
-        return new ResponseEntity<>(createdEvent, HttpStatus.CREATED);
+    
+        // If venueId is provided, create a venue booking
+        if (venueId != null) {
+            venueService.bookVenueForEvent(venueId, createdEvent.getEventId(), createdEvent.getEventDay());
+        }
+    
+        // Return the created event details
+        return new ResponseEntity<>(eventService.getEventById(createdEvent.getEventId()), HttpStatus.CREATED);
     }
     
     @GetMapping
@@ -58,11 +73,17 @@ public class EventController {
     public ResponseEntity<SponsorshipDTO> acceptSponsorship(@PathVariable Long sponsorshipId) {
         return ResponseEntity.ok(eventService.acceptSponsorship(sponsorshipId));
     }
-    
-    @PutMapping("/{eventId}/venue")
-    public ResponseEntity<EventDTO> updateVenue(
-            @PathVariable Long eventId,
-            @RequestBody Long venueId) {
-        return ResponseEntity.ok(eventService.updateVenue(eventId, venueId));
+
+    @PutMapping("/updateVenueBooking")
+    public ResponseEntity<EventDTO> updateVenueBooking(@RequestParam("eventId") Long eventId, @RequestParam("venueId") Long venueId,@RequestParam("bookingDate") String bookingDate) {
+        return  ResponseEntity.ok(eventService.updateVenueBooked(eventId, venueId,bookingDate));
+    }
+
+    @DeleteMapping("/delete")
+    public ResponseEntity<Map<String, String>>deleteEvent(@RequestParam("eventId")Long eventId){
+        String message = eventService.deleteEventById(eventId);
+        Map<String,String>response = new HashMap<>();
+        response.put("message", message);
+        return  ResponseEntity.ok(response);
     }
 }

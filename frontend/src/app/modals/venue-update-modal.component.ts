@@ -1,4 +1,4 @@
-import { Component, Inject } from "@angular/core";
+import { Component, Inject, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import {
   MatDialogRef,
@@ -9,7 +9,8 @@ import { MatCardModule } from "@angular/material/card";
 import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
 import { EventService } from "../services/event.service";
-import { venues } from "../models/event.model";
+import { finalize } from "rxjs/operators";
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: "app-venue-update-modal",
@@ -20,23 +21,33 @@ import { venues } from "../models/event.model";
     MatCardModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressSpinnerModule
   ],
   template: `
     <div class="venue-update-container">
       <h2 mat-dialog-title>Select New Venue</h2>
-      <div class="venues-grid">
+      <div *ngIf="isLoadingVenues" class="loading-indicator">
+        <mat-spinner></mat-spinner>
+      </div>
+      <div class="venues-grid" *ngIf="!isLoadingVenues">
         <mat-card
-          *ngFor="let venue of venues"
-          [class.selected]="selectedVenue === venue.id"
-          (click)="selectVenue(venue.id)"
+          *ngFor="let venue of availableVenues"
+          [class.selected]="selectedVenue === venue.venuId"
+          (click)="selectVenue(venue.venueId)"
           class="venue-card"
         >
           <mat-card-header>
             <mat-icon mat-card-avatar>location_on</mat-icon>
-            <mat-card-title>{{ venue.name }}</mat-card-title>
+            <mat-card-title>{{ venue.venueName }}</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            <p>Capacity: {{ venue.capacity }}</p>
+            <p>Capacity: {{ venue.seatingArea }}</p>
+          </mat-card-content>
+          <mat-card-content>
+            <p>Type: {{ venue.venueType }}</p>
+          </mat-card-content>
+          <mat-card-content>
+            <p>Facilities: {{ venue.venueFacility }}</p>
           </mat-card-content>
         </mat-card>
       </div>
@@ -102,18 +113,44 @@ import { venues } from "../models/event.model";
       mat-icon {
         color: #69f0ae;
       }
+
+      .loading-indicator {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 200px;
+      }
     `,
   ],
 })
-export class VenueUpdateModalComponent {
-  venues = venues;
+export class VenueUpdateModalComponent implements OnInit {
+  availableVenues: any[] = [];
   selectedVenue?: number;
+  isLoadingVenues: boolean = false;
 
   constructor(
     private dialogRef: MatDialogRef<VenueUpdateModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { currentEventId: number },
+    @Inject(MAT_DIALOG_DATA) public data: { currentEventId: number; bookingDate: string },
     private eventService: EventService
   ) {}
+
+  ngOnInit() {
+    // Convert bookingDate string to Date
+    this.loadAvailableVenues(this.data.bookingDate);
+  }
+
+  loadAvailableVenues(date: string) {
+    this.isLoadingVenues = true;
+    this.availableVenues = [];
+    this.selectedVenue = undefined;
+
+    this.eventService
+      .getAvailableVenues(date) // Assuming this API takes an ISO string date
+      .pipe(finalize(() => (this.isLoadingVenues = false)))
+      .subscribe((venues) => {
+        this.availableVenues = venues;
+      });
+  }
 
   selectVenue(venueId: number) {
     this.selectedVenue = venueId;
@@ -122,7 +159,7 @@ export class VenueUpdateModalComponent {
   onUpdate() {
     if (this.selectedVenue) {
       this.eventService
-        .updateEventVenue(this.data.currentEventId, this.selectedVenue)
+        .updateEventVenue(this.data.currentEventId, this.selectedVenue,this.data.bookingDate)
         .subscribe(() => {
           this.dialogRef.close(true);
         });
