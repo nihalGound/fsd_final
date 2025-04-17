@@ -378,6 +378,7 @@ export class EventDetailsComponent implements OnInit {
 
   updateVenue() {
     if (!this.event) return;
+    console.log(this.event)
     const dialogRef = this.dialog.open(VenueUpdateModalComponent, {
       width: "800px",
       data: {

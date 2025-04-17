@@ -10,7 +10,7 @@ import { MatIconModule } from "@angular/material/icon";
 import { MatButtonModule } from "@angular/material/button";
 import { EventService } from "../services/event.service";
 import { finalize } from "rxjs/operators";
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressSpinnerModule } from "@angular/material/progress-spinner";
 
 @Component({
   selector: "app-venue-update-modal",
@@ -21,7 +21,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatCardModule,
     MatIconModule,
     MatButtonModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
   ],
   template: `
     <div class="venue-update-container">
@@ -130,7 +130,8 @@ export class VenueUpdateModalComponent implements OnInit {
 
   constructor(
     private dialogRef: MatDialogRef<VenueUpdateModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { currentEventId: number; bookingDate: string },
+    @Inject(MAT_DIALOG_DATA)
+    public data: { eventId: number; bookingDate: string },
     private eventService: EventService
   ) {}
 
@@ -159,7 +160,11 @@ export class VenueUpdateModalComponent implements OnInit {
   onUpdate() {
     if (this.selectedVenue) {
       this.eventService
-        .updateEventVenue(this.data.currentEventId, this.selectedVenue,this.data.bookingDate)
+        .updateEventVenue(
+          this.data.eventId,
+          this.selectedVenue,
+          this.data.bookingDate
+        )
         .subscribe(() => {
           this.dialogRef.close(true);
         });

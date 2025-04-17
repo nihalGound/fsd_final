@@ -13,7 +13,7 @@ import {
   providedIn: "root",
 })
 export class EventService {
-  private apiUrl = "http://localhost:8081/api";
+  private apiUrl = "https://nihal-fsd-backend.onrender.com/api";
 
   constructor(private http: HttpClient) {}
 
@@ -72,8 +72,8 @@ export class EventService {
       null,
       {
         params: {
-          eventId: eventId.toString(),
-          venueId: venueId.toString(),
+          eventId: eventId,
+          venueId: venueId,
           bookingDate,
         },
       }
